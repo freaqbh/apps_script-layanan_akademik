@@ -1,16 +1,19 @@
 // ==========================================
 // KONFIGURASI ID (WAJIB DIISI SESUAI AKUN ANDA)
 // ==========================================
-const SPREADSHEET_ID = 'ISI_ID_SPREADSHEET_ANDA_DI_SINI'; 
-const SHEET_NAME = 'Sheet1'; // Ganti jika nama tab/sheet Anda berbeda
-const FOLDER_DEST_ID = 'ISI_ID_FOLDER_TUJUAN_SIMPAN_DOCS';
+const SPREADSHEET_ID = {
+  'surat-bebas-prodi': '1Bzj7bAKEDwscB4yTBxWpL6yWTmYnUU8YafL1a-emhs8', 
+  'surat-layak-munaqosah': 'ISI_ID_SPREADSHEET_LAYAK', 
+}
 
-// Pemetaan ID Template Dokumen
+const FOLDER_DEST_ID = {
+  'surat-bebas-prodi': '1llYJFGHstGfR4RVh7j5Ib73uomiV5FEi', 
+  'surat-layak-munaqosah': 'ISI_ID_FOLDER_LAYAK', 
+}
+
 const TEMPLATE_IDS = {
-  // ID diambil dari URL dokumen yang Anda berikan:
-  'surat-aktif': '1CtN46GSZJrGRoaNEumh09P0GFVM37jcefnR74KtJZ2o', 
-  'surat-izin': 'ISI_ID_TEMPLATE_SURAT_IZIN_JIKA_ADA',
-  'surat-rekomendasi': 'ISI_ID_TEMPLATE_REKOMENDASI_JIKA_ADA'
+  'surat-bebas-prodi': '1CtN46GSZJrGRoaNEumh09P0GFVM37jcefnR74KtJZ2o', 
+  'surat-layak-munaqosah': 'ISI_ID_TEMPLATE_LAYAK', 
 };
 
 function doGet() {
@@ -19,96 +22,150 @@ function doGet() {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
-// Fungsi Utama yang dipanggil oleh React UI
-function siapkanSuratTemplate(payload) {
+// =======================================================
+// FUNGSI GENERATOR TANGGAL FORMAT INDONESIA
+// =======================================================
+function formatTanggalIndonesia(timestampString) {
+  // Array nama bulan dalam Bahasa Indonesia
+  const namaBulan = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ];
+
+  const tanggalObj = new Date(timestampString);
+
+  // Ambil komponen tanggal, bulan, dan tahun
+  const tanggal = tanggalObj.getDate();
+  const bulan = namaBulan[tanggalObj.getMonth()]; // getMonth() menghasilkan indeks 0-11
+  const tahun = tanggalObj.getFullYear();
+  
+  // Format tanggal agar selalu 2 digit (misalnya 09)
+  const tanggalDiformat = ('0' + tanggal).slice(-2);
+
+  // Gabungkan semua komponen menjadi satu string
+  return `${tanggalDiformat} ${bulan} ${tahun}`;
+}
+
+// =======================================================
+// FUNGSI GENERATOR NOMOR SURAT DINAMIS
+// =======================================================
+function buatNomorSurat(kunciNomor, kodeStatis) {
+  const properties = PropertiesService.getScriptProperties();
+  
+  // Mengambil nomor terakhir berdasarkan kunci spesifik surat. Jika belum ada, mulai dari 0.
+  let nomorTerakhir = parseInt(properties.getProperty(kunciNomor) || '0');
+  const nomorBaru = nomorTerakhir + 1;
+  
+  // Simpan nomor baru kembali ke properti
+  properties.setProperty(kunciNomor, nomorBaru.toString());
+
+  const today = new Date();
+  const tahun = today.getFullYear();
+  const bulan = ('0' + (today.getMonth() + 1)).slice(-2); 
+
+  // Format akhir: No.1/D.I.1.4/PAI-01/01/2025
+  const nomorSuratLengkap = `No.${nomorBaru}/${kodeStatis}/${bulan}/${tahun}`;
+  
+  return nomorSuratLengkap;
+}
+
+// =======================================================
+// FUNGSI ROUTER (PINTU MASUK UTAMA)
+// =======================================================
+function prosesPembuatanSurat(payload) {
+  timestamp = new Date();
+  const tanggalSurat = formatTanggalIndonesia(timestamp);
+
   try {
     const jenisSurat = payload.jenisSurat;
-    const data = payload.dataMahasiswa;
-    
-    // ----------------------------------------------------
-    // 1. SIMPAN DATA KE GOOGLE SHEETS
-    // ----------------------------------------------------
-    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
-    if (!sheet) {
-      throw new Error(`Sheet dengan nama "${SHEET_NAME}" tidak ditemukan.`);
+    const data = payload.dataForm;
+
+    switch(jenisSurat) {
+      case 'surat-bebas-prodi':
+        return buatSuratBebasProdi(data, tanggalSurat);
+      // case 'surat-layak-munaqosah':
+      //   return buatSuratLayak(data, tanggalSurat);
+      default:
+        throw new Error("Jenis surat tidak dikenali oleh sistem: " + jenisSurat);
     }
-    
-    const timestamp = new Date();
-    // Jika Anda menambahkan input email di React, kita gunakan data.email.
-    // Jika tidak, kita coba ambil email akun Google yang sedang aktif (jika disetting run as User).
-    const emailTujuan = data.email || Session.getActiveUser().getEmail(); 
-    
-    // Siapkan baris baru untuk di-insert ke Spreadsheet
-    // Urutan kolom: [Waktu, Jenis Surat, Nama, NIM, Prodi, Keperluan, Email, Link Dokumen (diisi nanti)]
-    const newRow = [
-      timestamp,
-      jenisSurat,
-      data.nama,
-      data.nim,
-      data.prodi,
-      data.keperluan,
-      emailTujuan
-    ];
-    
-    // Tambahkan baris baru ke paling bawah spreadsheet
-    sheet.appendRow(newRow);
-    const lastRow = sheet.getLastRow(); // Mendapatkan nomor baris yang baru saja ditambahkan
-    
-    // ----------------------------------------------------
-    // 2. DUPLIKASI GOOGLE DOCS TEMPLATE
-    // ----------------------------------------------------
-    const templateId = TEMPLATE_IDS[jenisSurat];
-    if (!templateId) {
-      throw new Error(`Template untuk surat "${jenisSurat}" belum dikonfigurasi.`);
-    }
-    
-    const fileTemplate = DriveApp.getFileById(templateId);
-    const folderTujuan = DriveApp.getFolderById(FOLDER_DEST_ID);
-    
-    // Buat nama file spesifik agar mudah dicari di Drive
-    const namaFileBaru = `Surat_${jenisSurat}_${data.nama}_${data.nim}`;
-    const fileBaru = fileTemplate.makeCopy(namaFileBaru, folderTujuan);
-    
-    // ----------------------------------------------------
-    // 3. REPLACE TEKS DI DOKUMEN BARU
-    // ----------------------------------------------------
-    const newDoc = DocumentApp.openById(fileBaru.getId());
-    const body = newDoc.getBody();
-    
-    // Ganti kata kunci di template dengan data dari form UI
-    // Pastikan di template dokumen Anda terdapat tag seperti {{nama}}, {{nim}}, dll.
-    body.replaceText('{{nama}}', data.nama);
-    body.replaceText('{{nim}}', data.nim);
-    body.replaceText('{{prodi}}', data.prodi);
-    body.replaceText('{{keperluan}}', data.keperluan);
-    
-    // Simpan perubahan dan tutup dokumen
-    newDoc.saveAndClose();
-    const docUrl = newDoc.getUrl();
-    
-    // Update kolom terakhir di Google Sheets dengan Link Dokumen yang baru jadi
-    sheet.getRange(lastRow, 8).setValue(docUrl); // Angka 8 adalah kolom ke-8 (Kolom H)
-    
-    // ----------------------------------------------------
-    // 4. KIRIM EMAIL KE PENGGUNA
-    // ----------------------------------------------------
-    if (emailTujuan) {
-      const subjectEmail = `Layanan Akademik - Dokumen Anda Telah Selesai`;
-      const bodyEmail = `Halo ${data.nama},\n\nPermintaan pembuatan dokumen Anda telah berhasil diproses oleh sistem.\n\nDetail:\n- Layanan: ${jenisSurat}\n- NIM: ${data.nim}\n\nAnda dapat mengakses atau mengunduh dokumen Anda melalui tautan berikut:\n${docUrl}\n\nTerima kasih,\nTim Layanan Akademik`;
-      
-      // Kirim email (Bisa juga melampirkan file PDF dengan menambahkan opsi attachment)
-      MailApp.sendEmail({
-        to: emailTujuan,
-        subject: subjectEmail,
-        body: bodyEmail
-      });
-    }
-    
-    // Kembalikan URL dokumen ke React agar bisa ditampilkan di UI
-    return docUrl;
-    
   } catch (error) {
-    // Tangkap error dan lempar kembali ke frontend agar muncul sebagai alert
     throw new Error(error.message);
   }
+}
+
+// =======================================================
+// LOGIKA 1: SURAT BEBAS PRODI
+// =======================================================
+function buatSuratBebasProdi(data, tanggalSurat) {
+  const spreadsheetId = SPREADSHEET_ID['surat-bebas-prodi'];
+  if (!spreadsheetId) throw new Error("ID Spreadsheet untuk Surat Bebas Prodi belum diatur.");
+  const sheet = SpreadsheetApp.openById(spreadsheetId).getSheetByName('test'); // Ganti nama Tab Sheet-nya
+  if (!sheet) throw new Error("Tab Spreadsheet 'Bebas_Prodi' tidak ditemukan.");
+  
+  const templateId = TEMPLATE_IDS['surat-bebas-prodi'];
+  if (!templateId) throw new Error("ID Template Surat Bebas Prodi belum diatur.");
+
+  const folderId = FOLDER_DEST_ID['surat-bebas-prodi'];
+  if (!folderId) throw new Error("ID Folder tujuan untuk Surat Bebas Prodi belum diatur.");
+
+  // 1. GENERATE NOMOR SURAT KHUSUS BEBAS PRODI
+  const KUNCI_NOMOR_BEBAS_PRODI = 'NOMOR_URUT_BEBAS_PRODI'; // Key unik agar tidak tercampur dengan surat lain
+  const KODE_STATIS_BEBAS_PRODI = 'D.I.1.4/PAI-01';         // Sesuaikan kode statik kampus Anda
+  
+  const nomorSurat = buatNomorSurat(KUNCI_NOMOR_BEBAS_PRODI, KODE_STATIS_BEBAS_PRODI);
+  
+  // 2. SUSUN DATA UNTUK SPREADSHEET (15 Kolom)
+  const timestamp = new Date();
+  const newRow = [
+    timestamp,                        // A: Timestamp
+    data.nama,                        // C: NAMA
+    data.nim,                         // D: NIM
+    data.tgl_munaqosah,               // E: HARI/TGL MUNAQASAH
+    data.nilai_ujian,                 // F: NILAI UJIAN
+    data.judul_skripsi,               // G: JUDUL SKRIPSI
+    data.ipk,                         // H: IPK
+    data.ketua_sidang,                // I: KETUA SIDANG
+    data.sekretaris_sidang,           // J: SEKRETARIS SIDANG
+    data.penguji_1,                   // K: PENGUJI 1
+    data.penguji_2,                   // L: PENGUJI 2
+    data.pembimbing_1,                // M: PEMBIMBING 1
+    data.pembimbing_2                 // N: PEMBIMBING 2
+  ];
+  
+  sheet.appendRow(newRow);
+  const lastRow = sheet.getLastRow();
+  
+  // 3. PROSES DOKUMEN GOOGLE DOCS
+  const fileTemplate = DriveApp.getFileById(templateId);
+  const folderTujuan = DriveApp.getFolderById(folderId);
+  
+  const namaFileBaru = `BebasProdi_${data.nim}_${data.nama}`;
+  const fileBaru = fileTemplate.makeCopy(namaFileBaru, folderTujuan);
+  
+  const newDoc = DocumentApp.openById(fileBaru.getId());
+  const body = newDoc.getBody();
+  
+  // REPLACE TEKS (Pastikan Template Docs memiliki Tag ini)
+  body.replaceText('{{NOMOR_SURAT}}', nomorSurat);
+  body.replaceText('{{NAMA}}', data.nama.toUpperCase());
+  body.replaceText('{{NIM}}', data.nim);
+  body.replaceText('{{TGL_MUNAQOSAH}}', data.tgl_munaqosah);
+  body.replaceText('{{NILAI_UJIAN}}', data.nilai_ujian);
+  body.replaceText('{{JUDUL_SKRIPSI}}', data.judul_skripsi);
+  body.replaceText('{{IPK}}', data.ipk);
+  body.replaceText('{{KETUA_SIDANG}}', data.ketua_sidang);
+  body.replaceText('{{SEKRETARIS_SIDANG}}', data.sekretaris_sidang);
+  body.replaceText('{{PENGUJI_1}}', data.penguji_1);
+  body.replaceText('{{PENGUJI_2}}', data.penguji_2);
+  body.replaceText('{{PEMBIMBING_1}}', data.pembimbing_1);
+  body.replaceText('{{PEMBIMBING_2}}', data.pembimbing_2 || '-'); 
+  body.replaceText('{{TANGGAL_SURAT}}', tanggalSurat);
+  
+  newDoc.saveAndClose();
+  const docUrl = newDoc.getUrl();
+  
+  // 4. SIMPAN LINK DOKUMEN KE SPREADSHEET (Kolom O / ke-15)
+  sheet.getRange(lastRow, 15).setValue(docUrl); 
+  
+  return docUrl;
 }

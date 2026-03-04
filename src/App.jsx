@@ -29,25 +29,7 @@ export default function App() {
       label: 'Surat Bebas Prodi', 
       icon: <FileText size={20} />,
       previewUrl: 'https://lh3.googleusercontent.com/d/1SfOmXhBjbBik5_sQh1a9nZYsLRYaocJd' // Ganti dengan URL gambar preview yang sesuai
-    },
-    { 
-      id: 'surat-layak-munaqosah', 
-      label: 'Surat Keterangan Layak Munaqosah', 
-      icon: <FileText size={20} />,
-      previewUrl: 'https://placehold.co/600x848/fdf4ff/701a75?text=Preview+Surat+Lulus%5Cn(Ganti+dengan+Gambar+Anda)' 
-    },
-    { 
-      id: 'surat-tugas-dosen', 
-      label: 'Surat Tugas Dosen', 
-      icon: <FileText size={20} />,
-      previewUrl: 'https://placehold.co/600x848/f0fdf4/14532d?text=Preview+Surat+Tugas%5Cn(Ganti+dengan+Gambar+Anda)' 
-    },
-    { 
-      id: 'surat-aktif', 
-      label: 'Surat Keterangan Aktif', 
-      icon: <FileText size={20} />,
-      previewUrl: 'https://lh3.googleusercontent.com/d/1SfOmXhBjbBik5_sQh1a9nZYsLRYaocJd' // Ganti dengan URL gambar preview yang sesuai
-    },
+    }
   ];
 
   // Fungsi untuk memanggil Backend Apps Script
@@ -195,9 +177,8 @@ export default function App() {
               
                 <div className="p-6 md:p-8">
                   {/* render sesuai surat yang dipilih */}
-                  {activeTab === 'surat-lulus' && <FormSKLMunaqosah onSubmit={(data) => handleSubmitKeBackend('surat-lulus', data)} isProcessing={isProcessing} />}
-                  {activeTab === 'surat-aktif' && <FormSuratAktif onSubmit={(data) => handleSubmitKeBackend('surat-aktif', data)} isProcessing={isProcessing} />}
-                  {activeTab === 'surat-izin'  && <FormSuratIzin onSubmit={(data) => handleSubmitKeBackend('surat-izin', data)} isProcessing={isProcessing} />}
+                  {activeTab === 'surat-bebas-prodi' && <FormBebasProdi onSubmit={(data) => handleSubmitKeBackend('surat-bebas-prodi', data)} isProcessing={isProcessing} />}
+                  {activeTab === 'surat-validator' && <FormSuratValidator onSubmit={(data) => handleSubmitKeBackend('surat-validator', data)} isProcessing={isProcessing} />}
 
                   {docUrl && (
                     <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3 animate-in fade-in zoom-in duration-300">
@@ -263,74 +244,107 @@ export default function App() {
 // SUB-KOMPONEN FORM (Dapat dibuat sekompleks apapun tanpa merusak yang lain)
 // =========================================================================
 
-function FormSKLMunaqosah({ onSubmit, isProcessing }) {
-  const [form, setForm] = useState({ nama: '', nim: '', tgl_munaqosah: '', nilai_ujian: '', judul_skripsi: '' });
+function FormBebasProdi({ onSubmit, isProcessing }) {
+  const [form, setForm] = useState({ 
+    nama: '', 
+    nim: '', 
+    tgl_munaqosah: '', 
+    nilai_ujian: '', 
+    judul_skripsi: '',
+    ipk: '',
+    ketua_sidang: '',
+    sekretaris_sidang: '',
+    penguji_1: '',
+    penguji_2: '',
+    pembimbing_1: '',
+    pembimbing_2: ''
+  });
   
   const handleChange = (e) => setForm({...form, [e.target.name]: e.target.value});
   const submitData = (e) => { e.preventDefault(); onSubmit(form); };
 
   return (
-    <form onSubmit={submitData} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-semibold mb-1">Nama</label>
-          <input required name="nama" value={form.nama} onChange={handleChange} className="w-full px-4 py-2 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold mb-1">NIM</label>
-          <input required name="nim" value={form.nim} onChange={handleChange} className="w-full px-4 py-2 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-blue-500" />
+    <form onSubmit={submitData} className="space-y-6">
+      
+      {/* Bagian 1: Data Mahasiswa */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-2">Data Mahasiswa</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1 pb-5">Nama Lengkap</label>
+            <input type="text" name="nama" required value={form.nama} onChange={handleChange} placeholder="Budi Santoso" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Nomor Induk Mahasiswa (NIM)</label>
+            <input type="text" name="nim" required value={form.nim} onChange={handleChange} placeholder="2024101001" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" />
+          </div>
         </div>
       </div>
-      <div>
-        <label className="block text-sm font-semibold mb-1">Judul Skripsi</label>
-        <textarea required name="judul_skripsi" value={form.judul_skripsi} onChange={handleChange} className="w-full px-4 py-2 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-blue-500"></textarea>
+
+      {/* Bagian 2: Data Ujian dan Skripsi */}
+      <div className="space-y-4 pt-2">
+        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-2">Data Skripsi & Nilai</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-3">
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Judul Skripsi</label>
+            <textarea name="judul_skripsi" required value={form.judul_skripsi} onChange={handleChange} rows="2" placeholder="Masukkan judul lengkap skripsi..." className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm resize-none"></textarea>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Hari/Tgl Munaqosah</label>
+            <input type="text" name="tgl_munaqosah" required value={form.tgl_munaqosah} onChange={handleChange} placeholder="Contoh: Rabu, 22 Januari 2025" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Nilai Ujian Munaqosah</label>
+            <input type="text" name="nilai_ujian" required value={form.nilai_ujian} onChange={handleChange} placeholder="Contoh: 85,25" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1 pb-5">IPK Akhir</label>
+            <input type="text" name="ipk" required value={form.ipk} onChange={handleChange} placeholder="Contoh: 3.85" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" />
+          </div>
+        </div>
       </div>
-      <button type="submit" disabled={isProcessing} className="w-full mt-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all">
-        {isProcessing ? 'Memproses...' : 'Buat SKL Munaqosah'}
-      </button>
+
+      {/* Bagian 3: Susunan Panitia Ujian */}
+      <div className="space-y-4 pt-2">
+        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-2">Susunan Dewan Penguji</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Ketua Sidang</label>
+            <input type="text" name="ketua_sidang" required value={form.ketua_sidang} onChange={handleChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Sekretaris Sidang</label>
+            <input type="text" name="sekretaris_sidang" required value={form.sekretaris_sidang} onChange={handleChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Penguji 1</label>
+            <input type="text" name="penguji_1" required value={form.penguji_1} onChange={handleChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Penguji 2</label>
+            <input type="text" name="penguji_2" required value={form.penguji_2} onChange={handleChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Pembimbing 1</label>
+            <input type="text" name="pembimbing_1" required value={form.pembimbing_1} onChange={handleChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Pembimbing 2</label>
+            <input type="text" name="pembimbing_2" value={form.pembimbing_2} onChange={handleChange} placeholder="(Kosongkan jika tidak ada)" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" />
+          </div>
+        </div>
+      </div>
+
+      <div className="pt-6 border-t border-slate-100">
+        <button 
+          type="submit" 
+          disabled={isProcessing} 
+          className={`w-full py-4 bg-blue-900 hover:bg-blue-950 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-100 flex justify-center items-center gap-2 ${isProcessing ? 'opacity-70 cursor-not-allowed' : ''}`}
+        >
+          {isProcessing ? 'Sistem sedang memproses...' : 'Simpan Data & Generate Dokumen'}
+        </button>
+      </div>
     </form>
   );
 }
 
-function FormSuratAktif({ onSubmit, isProcessing }) {
-  const [form, setForm] = useState({ nama: '', nim: '', semester: '', keperluan: '' });
-  
-  const handleChange = (e) => setForm({...form, [e.target.name]: e.target.value});
-  const submitData = (e) => { e.preventDefault(); onSubmit(form); };
-
-  return (
-    <form onSubmit={submitData} className="space-y-4">
-      {/* Form ini berbeda bentuknya dengan form SKL */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-semibold mb-1">Nama Lengkap</label>
-          <input required name="nama" value={form.nama} onChange={handleChange} className="w-full px-4 py-2 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold mb-1">NIM</label>
-          <input required name="nim" value={form.nim} onChange={handleChange} className="w-full px-4 py-2 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold mb-1">Semester Aktif</label>
-          <select name="semester" value={form.semester} onChange={handleChange} className="w-full px-4 py-2 bg-slate-50 border rounded-xl">
-             <option value="">Pilih Semester...</option>
-             <option value="Ganjil">Ganjil</option>
-             <option value="Genap">Genap</option>
-          </select>
-        </div>
-      </div>
-      <div>
-        <label className="block text-sm font-semibold mb-1">Tujuan/Keperluan Pembuatan Surat</label>
-        <textarea required name="keperluan" value={form.keperluan} onChange={handleChange} className="w-full px-4 py-2 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-blue-500"></textarea>
-      </div>
-      <button type="submit" disabled={isProcessing} className="w-full mt-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all">
-        {isProcessing ? 'Memproses...' : 'Buat Surat Keterangan Aktif'}
-      </button>
-    </form>
-  );
-}
-
-function FormSuratIzin({ onSubmit, isProcessing }) {
-  // Logic form ketiga...
-  return <div className="text-center p-10 font-bold text-slate-400">Desain form surat Izin di sini...</div>
-}
