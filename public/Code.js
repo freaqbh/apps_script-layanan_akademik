@@ -100,7 +100,7 @@ function buatSuratBebasProdi(data, tanggalSurat) {
   const spreadsheetId = SPREADSHEET_ID['surat-bebas-prodi'];
   if (!spreadsheetId) throw new Error("ID Spreadsheet untuk Surat Bebas Prodi belum diatur.");
   const sheet = SpreadsheetApp.openById(spreadsheetId).getSheetByName('test'); // Ganti nama Tab Sheet-nya
-  if (!sheet) throw new Error("Tab Spreadsheet 'Bebas_Prodi' tidak ditemukan.");
+  if (!sheet) throw new Error("Tab Spreadsheet tidak ditemukan.");
   
   const templateId = TEMPLATE_IDS['surat-bebas-prodi'];
   if (!templateId) throw new Error("ID Template Surat Bebas Prodi belum diatur.");
@@ -146,20 +146,20 @@ function buatSuratBebasProdi(data, tanggalSurat) {
   const body = newDoc.getBody();
   
   // REPLACE TEKS (Pastikan Template Docs memiliki Tag ini)
-  body.replaceText('{{NOMOR_SURAT}}', nomorSurat);
-  body.replaceText('{{NAMA}}', data.nama.toUpperCase());
-  body.replaceText('{{NIM}}', data.nim);
-  body.replaceText('{{TGL_MUNAQOSAH}}', data.tgl_munaqosah);
-  body.replaceText('{{NILAI_UJIAN}}', data.nilai_ujian);
-  body.replaceText('{{JUDUL_SKRIPSI}}', data.judul_skripsi);
-  body.replaceText('{{IPK}}', data.ipk);
-  body.replaceText('{{KETUA_SIDANG}}', data.ketua_sidang);
-  body.replaceText('{{SEKRETARIS_SIDANG}}', data.sekretaris_sidang);
-  body.replaceText('{{PENGUJI_1}}', data.penguji_1);
-  body.replaceText('{{PENGUJI_2}}', data.penguji_2);
-  body.replaceText('{{PEMBIMBING_1}}', data.pembimbing_1);
-  body.replaceText('{{PEMBIMBING_2}}', data.pembimbing_2 || '-'); 
-  body.replaceText('{{TANGGAL_SURAT}}', tanggalSurat);
+  body.replaceText('{{nomorSurat}}', nomorSurat);
+  body.replaceText('{{nama}}', data.nama);
+  body.replaceText('{{nim}}', data.nim);
+  body.replaceText('{{tglMunaqosah}}', data.tgl_munaqosah);
+  body.replaceText('{{nilaiUjian}}', data.nilai_ujian);
+  body.replaceText('{{judulSkripsi}}', data.judul_skripsi);
+  body.replaceText('{{ipk}}', data.ipk);
+  body.replaceText('{{ketuaSidang}}', data.ketua_sidang);
+  body.replaceText('{{sekretarisSidang}}', data.sekretaris_sidang);
+  body.replaceText('{{penguji1}}', data.penguji_1);
+  body.replaceText('{{penguji2}}', data.penguji_2);
+  body.replaceText('{{pembimbing1}}', data.pembimbing_1);
+  body.replaceText('{{pembimbing2}}', data.pembimbing_2 || '-'); 
+  body.replaceText('{{tanggalSurat}}', tanggalSurat);
   
   newDoc.saveAndClose();
   const docUrl = newDoc.getUrl();
