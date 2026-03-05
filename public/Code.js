@@ -114,12 +114,34 @@ function buatSuratBebasProdi(data, tanggalSurat) {
   
   const nomorSurat = buatNomorSurat(KUNCI_NOMOR_BEBAS_PRODI, KODE_STATIS_BEBAS_PRODI);
 
-  // reformat tanggal munaqosah ke format Indonesia
+// --- MULAI PERBAIKAN BUG TANGGAL ---
+  
+  // 1. Pecah teks "2025-12-10" menjadi array [2025, 12, 10]
+  const parts = data.tgl_munaqosah.split('-');
+  const tahun = parseInt(parts[0], 10);
+  const bulanIndex = parseInt(parts[1], 10) - 1; // Di JS bulan dimulai dari 0 (Januari=0, Desember=11)
+  const tanggal = parseInt(parts[2], 10);
+
+  // 2. Buat objek Date menggunakan format angka (Tahun, Bulan, Tanggal)
+  // Cara ini 100% kebal terhadap bug zona waktu UTC
+  const tglMunaqosahObj = new Date(tahun, bulanIndex, tanggal);
+
+  // 3. Ambil nama hari
   const namaHari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-  const tglMunaqosahObj = new Date(data.tgl_munaqosah);
   const hariMunaqosah = namaHari[tglMunaqosahObj.getDay()];
-  const tanggalDiformat = formatTanggalIndonesia(data.tgl_munaqosah);
-  data.tgl_munaqosah = `${hariMunaqosah}, ${tanggalDiformat}`;
+
+  // 4. Ambil nama bulan bahasa Indonesia
+  const namaBulanArr = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ];
+  const bulanDiformat = namaBulanArr[bulanIndex];
+  
+  // 5. Pastikan tanggal selalu 2 digit (misal: "09" atau "10")
+  const tanggalDiformat = ('0' + tanggal).slice(-2);
+
+  // 6. Simpan hasil akhirnya ke dalam data
+  data.tgl_munaqosah = `${hariMunaqosah}, ${tanggalDiformat} ${bulanDiformat} ${tahun}`;
   
   // 2. SUSUN DATA UNTUK SPREADSHEET (15 Kolom)
   const timestamp = new Date();
