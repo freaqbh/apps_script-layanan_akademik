@@ -113,6 +113,13 @@ function buatSuratBebasProdi(data, tanggalSurat) {
   const KODE_STATIS_BEBAS_PRODI = 'D.I.1.4/PAI-01';         // Sesuaikan kode statik kampus Anda
   
   const nomorSurat = buatNomorSurat(KUNCI_NOMOR_BEBAS_PRODI, KODE_STATIS_BEBAS_PRODI);
+
+  // reformat tanggal munaqosah ke format Indonesia
+  const namaHari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+  const tglMunaqosahObj = new Date(data.tgl_munaqosah);
+  const hariMunaqosah = namaHari[tglMunaqosahObj.getDay()];
+  const tanggalDiformat = formatTanggalIndonesia(data.tgl_munaqosah);
+  data.tgl_munaqosah = `${hariMunaqosah}, ${tanggalDiformat}`;
   
   // 2. SUSUN DATA UNTUK SPREADSHEET (15 Kolom)
   const timestamp = new Date();

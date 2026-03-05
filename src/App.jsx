@@ -28,7 +28,7 @@ export default function App() {
       id: 'surat-bebas-prodi', 
       label: 'Surat Bebas Prodi', 
       icon: <FileText size={20} />,
-      previewUrl: 'https://lh3.googleusercontent.com/d/1SfOmXhBjbBik5_sQh1a9nZYsLRYaocJd' // Ganti dengan URL gambar preview yang sesuai
+      previewUrl: 'https://lh3.googleusercontent.com/d/1AqOLIkQyUYBAHp2LXnyeWNozVSJdXU2N' // Ganti dengan URL gambar preview yang sesuai
     }
   ];
 
@@ -57,10 +57,10 @@ export default function App() {
   return (
     <div className="flex h-screen bg-slate-100 font-sans text-slate-800">
       
-      {/* SIDEBAR */}
+{/* SIDEBAR */}
       <aside className={`
-        ${isSidebarOpen ? 'w-72' : 'w-20'} 
         bg-white border-r border-slate-200 transition-all duration-300 flex flex-col fixed h-full z-30 md:relative shadow-lg
+        ${isSidebarOpen ? 'translate-x-0 w-72' : '-translate-x-full w-72 md:translate-x-0 md:w-20'}
       `}>
         <div className="p-6 flex items-center gap-3 border-b border-slate-100">
           <img src={logoKampus} alt="Logo Kampus" className="w-10 h-10 object-contain drop-shadow-sm" />
@@ -69,11 +69,11 @@ export default function App() {
 
         <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
           <button 
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => { gantiTab('dashboard'); if(window.innerWidth < 768) setSidebarOpen(false); }}
             className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${activeTab === 'dashboard' ? 'bg-blue-50 text-blue-900 font-semibold' : 'hover:bg-slate-50 text-slate-600'}`}
           >
-            <Home size={20} />
-            {isSidebarOpen && <span>Beranda Utama</span>}
+            <Home size={20} className="shrink-0" />
+            {isSidebarOpen && <span className="truncate">Beranda Utama</span>}
           </button>
 
           <div className="pt-6 pb-2 px-3">
@@ -83,23 +83,23 @@ export default function App() {
           {menuSurat.map((item) => (
             <button 
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => { gantiTab(item.id); if(window.innerWidth < 768) setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${activeTab === item.id ? 'bg-blue-50 text-blue-900 font-semibold shadow-sm border border-blue-100' : 'hover:bg-slate-50 text-slate-600 border border-transparent'}`}
             >
-              {item.icon}
+              <div className="shrink-0">{item.icon}</div>
               {isSidebarOpen && <span className="truncate text-left flex-1">{item.label}</span>}
-              {isSidebarOpen && activeTab === item.id && <ChevronRight size={16} className="text-blue-500" />}
+              {isSidebarOpen && activeTab === item.id && <ChevronRight size={16} className="text-blue-500 shrink-0" />}
             </button>
           ))}
         </nav>
 
         <div className="p-4 border-t border-slate-100 bg-slate-50/50">
-          <div className="flex items-center gap-3 p-2 rounded-xl">
-            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 border-2 border-white shadow-sm">
+          <div className="flex items-center gap-3 p-2 rounded-xl overflow-hidden">
+            <div className="w-10 h-10 shrink-0 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 border-2 border-white shadow-sm">
               <User size={20} />
             </div>
             {isSidebarOpen && (
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-slate-700 truncate">Sistem Cerdas</p>
                 <p className="text-xs text-slate-400">Ver. 2.0</p>
               </div>
@@ -119,16 +119,17 @@ export default function App() {
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
         
-        {/* NAVBAR */}
+      {/* NAVBAR */}
         <header className="h-16 bg-blue-900 flex items-center justify-between px-4 md:px-6 sticky top-0 z-10">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!isSidebarOpen)}
-              className="group p-2 hover:bg-slate-100 rounded-md transition-colors duration-200"
+              className="group p-2 hover:bg-slate-100/10 rounded-md transition-colors duration-200"
             >
-              {isSidebarOpen ? <X size={20} className="text-yellow-400 group-hover:text-blue-900 transition-colors " /> : <Menu size={20} className="text-yellow-400 group-hover:text-blue-900 transition-colors" />}
+              {isSidebarOpen ? <X size={20} className="text-yellow-400 transition-colors" /> : <Menu size={20} className="text-yellow-400 transition-colors" />}
             </button>
-            <h1 className="text-lg font-semibold text-yellow-400 hidden sm:block">
+            {/* Ubah h1 di bawah ini agar muncul di mobile namun di-truncate */}
+            <h1 className="text-base sm:text-lg font-semibold text-yellow-400 truncate max-w-[200px] sm:max-w-none">
               {activeTab === 'dashboard' ? 'Dashboard' : menuSurat.find(m => m.id === activeTab)?.label}
             </h1>
           </div>
@@ -169,7 +170,7 @@ export default function App() {
             <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start animate-in fade-in duration-500">
               
               {/* KOLOM KIRI: FORMULIR */}
-              <div className="lg:col-span-5 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden sticky top-6">
+              <div className="lg:col-span-5 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden lg:sticky lg:top-6">
                 <div className="bg-slate-50 p-6 border-b border-slate-200 flex items-center gap-3">
                   <Edit3 className="text-blue-900" />
                   <h2 className="text-lg font-bold text-slate-800">Formulir Data</h2>
@@ -291,7 +292,7 @@ function FormBebasProdi({ onSubmit, isProcessing }) {
           </div>
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">Hari/Tgl Munaqosah</label>
-            <input type="text" name="tgl_munaqosah" required value={form.tgl_munaqosah} onChange={handleChange} placeholder="Contoh: Rabu, 22 Januari 2025" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" />
+            <input type="date" name="tgl_munaqosah" required value={form.tgl_munaqosah} onChange={handleChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">Nilai Ujian Munaqosah</label>
