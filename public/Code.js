@@ -117,19 +117,19 @@ function buatSuratBebasProdi(data, tanggalSurat) {
   // 2. SUSUN DATA UNTUK SPREADSHEET (15 Kolom)
   const timestamp = new Date();
   const newRow = [
-    timestamp,                        // A: Timestamp
-    data.nama,                        // C: NAMA
-    data.nim,                         // D: NIM
-    data.tgl_munaqosah,               // E: HARI/TGL MUNAQASAH
-    data.nilai_ujian,                 // F: NILAI UJIAN
-    data.judul_skripsi,               // G: JUDUL SKRIPSI
-    data.ipk,                         // H: IPK
-    data.ketua_sidang,                // I: KETUA SIDANG
-    data.sekretaris_sidang,           // J: SEKRETARIS SIDANG
-    data.penguji_1,                   // K: PENGUJI 1
-    data.penguji_2,                   // L: PENGUJI 2
-    data.pembimbing_1,                // M: PEMBIMBING 1
-    data.pembimbing_2                 // N: PEMBIMBING 2
+    timestamp,                        
+    data.nama,                        
+    data.nim,                         
+    data.tgl_munaqosah,               
+    data.nilai_ujian,                 
+    data.judul_skripsi,               
+    data.ipk,                         
+    data.ketua_sidang,                
+    data.sekretaris_sidang,           
+    data.penguji_1,                   
+    data.penguji_2,                   
+    data.pembimbing_1,                
+    data.pembimbing_2                 
   ];
   
   sheet.appendRow(newRow);
@@ -165,7 +165,7 @@ function buatSuratBebasProdi(data, tanggalSurat) {
   const docUrl = newDoc.getUrl();
   
   // 4. SIMPAN LINK DOKUMEN KE SPREADSHEET (Kolom O / ke-15)
-  sheet.getRange(lastRow, 15).setValue(docUrl); 
+  sheet.getRange(lastRow, 14).setValue(docUrl); 
   
   return docUrl;
 }
